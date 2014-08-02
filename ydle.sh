@@ -1,6 +1,28 @@
 #!/bin/bash
+#
+#	Nom 		: ydle.sh 
+#	Auteur 		: Yaug
+#	Date 		: 01/07/2014
+#
+#	Description	: script de création de la base de données et d'installation du framework et du hub
+#
+#	Usage		: bash ydle.sh
+#
+#	Mofidications
+#	Nom		: Date		: Raison
+#	==================================================================================================
+#	EricDele	: 02/08/2014	: Ajout des tests sur les saisies de variables, correction variable
+#			:		: nom de la base, ajout des messages d'erreur
+#	===================================================================================================
+#	
+
 echo "Site path (default to /var/www/): "
-read  site_path;
+read  site_path
+if [[ "$site_path" == "" ]]
+then
+	echo -e "Setting default path to /var/www\n"
+	site_path=/var/www
+fi
 
 #####################
 #  DATABASE ACCESS  #
@@ -12,22 +34,51 @@ read  db_ydle_pass
 echo "Name of the database: "
 read db_ydle_name
 
+if [[ "$db_ydle_login" == "" || "$db_ydle_pass" == "" || "$db_ydle_name" == "" ]]
+then
+	echo "You have to set correctly the login, password and name of the database before continuing"
+	exit 1
+fi
+
 ######################
 #  DATABASE INSTALL  #
 ######################
-echo -n "Do you want to create database ? [Y/n]"
+echo -n "Do you want to create database ? [y/n]"
 read createdb
-if [ "$createdb" = "y" ]; then
+if [[ "$createdb" == "y" || "$createdb" == "Y" ]]
+then
         echo "Root password for mysql: "
         read  db_root_pass
-        echo "CREATE DATABASE ${db_name} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+	if [[ "$db_root_pass" == "" ]]
+	then
+		echo "You have to set correctly the database root password"
+		exit 1
+	fi
+
+        echo "CREATE DATABASE ${db_ydle_name} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
         CREATE USER '${db_ydle_login}'@'localhost' IDENTIFIED BY '${db_ydle_pass}';
-        GRANT ALL ON ${db_name}.* TO '${db_ydle_login}';
+        GRANT ALL ON ${db_ydle_name}.* TO '${db_ydle_login}';
         quit;"
-        mysql -uroot -p${db_root_pass} -e "CREATE DATABASE ${db_name} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+        mysql -uroot -p${db_root_pass} -e "CREATE DATABASE ${db_ydle_name} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
         CREATE USER '${db_ydle_login}'@'localhost' IDENTIFIED BY '${db_ydle_pass}';
-        GRANT ALL ON ${db_name}.* TO '${db_ydle_login}';
+        GRANT ALL ON ${db_ydle_name}.* TO '${db_ydle_login}';
         "
+	if [[ $? -ne 0 ]]
+	then
+		echo -e "\nSorry, it seems you have got an error during database creation process.\nPlease correct it before continuing"
+		echo -e "For information you have answered : \ndatabase name => $db_ydle_name, \ndatabase root password => $db_root_pass\n"
+		exit 1
+	fi
+else
+	echo -e "\nYou choose to do not create the database.\n\nWe are going to check the access to your database $db_ydle_name\n"
+	mysql -u${db_ydle_login} -p${db_ydle_pass} -e "use ${db_ydle_name};"
+        if [[ $? -ne 0 ]]
+        then
+                echo -e "\nSorry, it seems you have got an error for connecting to the database with the credentials you give.\nPlease correct it before continuing"
+                echo -e "For information you have answered : \ndatabase name => $db_ydle_name,\ndatabase login => $db_ydle_login,\ndatabase password => $db_ydle_pass\n"
+                exit 1
+        fi
 fi
 
 #####################
