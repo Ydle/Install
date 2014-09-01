@@ -10,10 +10,12 @@
 #
 #	Mofidications
 #	Nom		: Date		: Raison
-#	==================================================================================================
+#	===================================================================================================
 #	EricDele	: 02/08/2014	: Ajout des tests sur les saisies de variables, correction variable
 #			:		: nom de la base, ajout des messages d'erreur
 #	===================================================================================================
+#	Dormeur : 01/09/2014 : Ajout de la creation d'un utilisateur pour l'interface
+#       ===================================================================================================
 #	
 
 echo "Site path (default to /var/www/): "
@@ -37,6 +39,22 @@ read db_ydle_name
 if [[ "$db_ydle_login" == "" || "$db_ydle_pass" == "" || "$db_ydle_name" == "" ]]
 then
 	echo "You have to set correctly the login, password and name of the database before continuing"
+	exit 1
+fi
+
+#####################
+#  User ACCESS      #
+#####################
+echo "User login for the HUB : "
+read  user_hub_login
+echo "User password for the HUB: "
+read  user_hub_pass
+echo "User mail for the HUB : "
+read  user_hub_mail
+
+if [[ "$user_hub_login" == "" || "$user_hub_pass" == "" || "$user_hub_mail" == "" ]]
+then
+	echo "You have to set correctly the login, password and mail for the HUB before continuing"
 	exit 1
 fi
 
@@ -87,6 +105,7 @@ fi
 cd ${site_path};
 curl -s https://getcomposer.org/installer | php
 YDLE_SECRET="TopSecret" YDLE_LOCALE="en" YDLE_DB_DRIVER="pdo_mysql" YDLE_DB_HOST="127.0.0.1" YDLE_DB_PORT="null" YDLE_DB_NAME="${db_ydle_name}" YDLE_DB_USER="${db_ydle_login}" YDLE_DB_PASSWORD="${db_ydle_pass}" YDLE_MAILER_TRANSPORT="smtp" YDLE_MAILER_HOST="127.0.0.1" YDLE_MAILER_USER="null" YDLE_MAILER_PASSWORD="null" php composer.phar create-project -s dev ydle/framework ydle/
+fos:user:create ${user_hub_login} ${user_hub_mail} ${user_hub_pass}
 
 ###########################
 #  PROJECT CONFIGURATION  #
