@@ -15,7 +15,9 @@
 #			:		: nom de la base, ajout des messages d'erreur
 #	===================================================================================================
 #	Dormeur : 01/09/2014 : Ajout de la creation d'un utilisateur pour l'interface
-#       ===================================================================================================
+#   ===================================================================================================
+#	Yaug : 05/09/2014 : Correction script utilisateur + améliorations diverses
+#   ===================================================================================================
 #	
 
 echo "Site path (default to /var/www/): "
@@ -24,6 +26,14 @@ if [[ "$site_path" == "" ]]
 then
 	echo -e "Setting default path to /var/www\n"
 	site_path=/var/www
+fi
+
+echo "Site directory (default to ydle/): "
+read site_dir
+if [[ "$site_dir" == "" ]]
+then 
+	echo -e "Setting defaut dir to ydle/\n"
+        site_dir=ydle
 fi
 
 #####################
@@ -35,6 +45,8 @@ echo "Ydle password for mysql: "
 read  db_ydle_pass
 echo "Name of the database: "
 read db_ydle_name
+echo "Server of the database: "
+read db_host
 
 if [[ "$db_ydle_login" == "" || "$db_ydle_pass" == "" || "$db_ydle_name" == "" ]]
 then
@@ -88,15 +100,6 @@ then
 		echo -e "For information you have answered : \ndatabase name => $db_ydle_name, \ndatabase root password => $db_root_pass\n"
 		exit 1
 	fi
-else
-	echo -e "\nYou choose to do not create the database.\n\nWe are going to check the access to your database $db_ydle_name\n"
-	mysql -u${db_ydle_login} -p${db_ydle_pass} -e "use ${db_ydle_name};"
-        if [[ $? -ne 0 ]]
-        then
-                echo -e "\nSorry, it seems you have got an error for connecting to the database with the credentials you give.\nPlease correct it before continuing"
-                echo -e "For information you have answered : \ndatabase name => $db_ydle_name,\ndatabase login => $db_ydle_login,\ndatabase password => $db_ydle_pass\n"
-                exit 1
-        fi
 fi
 
 #####################
@@ -104,15 +107,17 @@ fi
 #####################
 cd ${site_path};
 curl -s https://getcomposer.org/installer | php
-YDLE_SECRET="TopSecret" YDLE_LOCALE="en" YDLE_DB_DRIVER="pdo_mysql" YDLE_DB_HOST="127.0.0.1" YDLE_DB_PORT="null" YDLE_DB_NAME="${db_ydle_name}" YDLE_DB_USER="${db_ydle_login}" YDLE_DB_PASSWORD="${db_ydle_pass}" YDLE_MAILER_TRANSPORT="smtp" YDLE_MAILER_HOST="127.0.0.1" YDLE_MAILER_USER="null" YDLE_MAILER_PASSWORD="null" php composer.phar create-project -s dev ydle/framework ydle/
+YDLE_SECRET="TopSecret" YDLE_LOCALE="en" YDLE_DB_DRIVER="pdo_mysql" YDLE_DB_HOST="${db_host}" YDLE_DB_PORT="null" YDLE_DB_NAME="${db_ydle_name}" YDLE_DB_USER="${db_ydle_login}" YDLE_DB_PASSWORD="${db_ydle_pass}" YDLE_MAILER_TRANSPORT="smtp" YDLE_MAILER_HOST="127.0.0.1" YDLE_MAILER_USER="null" YDLE_MAILER_PASSWORD="null" php composer.phar create-project -s dev ydle/framework ${site_dir}/
+cd ${site_dir};
 app/console fos:user:create ${user_hub_login} ${user_hub_mail} ${user_hub_pass}
 
 ###########################
 #  PROJECT CONFIGURATION  #
 ###########################
-chmod 777 ydle/app/console
+chmod 777 app/console
 
 #########################
 #  DEPENDENCIES UPDATE  #
 ########################
+
 
