@@ -105,7 +105,7 @@ fi
 cd ${site_path};
 curl -s https://getcomposer.org/installer | php
 YDLE_SECRET="TopSecret" YDLE_LOCALE="en" YDLE_DB_DRIVER="pdo_mysql" YDLE_DB_HOST="127.0.0.1" YDLE_DB_PORT="null" YDLE_DB_NAME="${db_ydle_name}" YDLE_DB_USER="${db_ydle_login}" YDLE_DB_PASSWORD="${db_ydle_pass}" YDLE_MAILER_TRANSPORT="smtp" YDLE_MAILER_HOST="127.0.0.1" YDLE_MAILER_USER="null" YDLE_MAILER_PASSWORD="null" php composer.phar create-project -s dev ydle/framework ydle/
-fos:user:create ${user_hub_login} ${user_hub_mail} ${user_hub_pass}
+app/console fos:user:create ${user_hub_login} ${user_hub_mail} ${user_hub_pass}
 
 ###########################
 #  PROJECT CONFIGURATION  #
