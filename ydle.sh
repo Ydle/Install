@@ -117,6 +117,7 @@ app/console fos:user:create ${user_hub_login} ${user_hub_mail} ${user_hub_pass}
 #  PROJECT CONFIGURATION  #
 ###########################
 chmod 777 app/console
+chown -R pi:pi ./*
 
 #########################
 #  DEPENDENCIES UPDATE  #
