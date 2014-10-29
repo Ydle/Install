@@ -118,6 +118,7 @@ app/console fos:user:create ${user_hub_login} ${user_hub_mail} ${user_hub_pass}
 ###########################
 chmod 777 app/console
 chown -R pi:pi ./*
+cp ../composer.phar ./
 
 #########################
 #  DEPENDENCIES UPDATE  #
