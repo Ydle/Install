@@ -1,24 +1,8 @@
 #!/bin/bash
-#
 #	Nom 		: ydle.sh 
 #	Auteur 		: Yaug
-#	Date 		: 01/07/2014
-#
-#	Description	: script de création de la base de données et d'installation du framework et du hub
-#
+#	Description	: Quick script to set-up the Ydle HUB UI
 #	Usage		: bash ydle.sh
-#
-#	Mofidications
-#	Nom		: Date		: Raison
-#	===================================================================================================
-#	EricDele	: 02/08/2014	: Ajout des tests sur les saisies de variables, correction variable
-#			:		: nom de la base, ajout des messages d'erreur
-#	===================================================================================================
-#	Dormeur : 01/09/2014 : Ajout de la creation d'un utilisateur pour l'interface
-#   ===================================================================================================
-#	Yaug : 05/09/2014 : Correction script utilisateur + améliorations diverses
-#   ===================================================================================================
-#	
 
 # Default values
 default_site_path=/var/www/
@@ -122,7 +106,7 @@ if [[ "$createdb" == "y" || "$createdb" == "Y" ]]
 then
     echo "Root password for mysql: "
     read  db_root_pass
-    
+
     echo "CREATE DATABASE ${db_ydle_name} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
     CREATE USER '${db_ydle_login}'@'localhost' IDENTIFIED BY '${db_ydle_pass}';
     GRANT ALL ON ${db_ydle_name}.* TO '${db_ydle_login}';
