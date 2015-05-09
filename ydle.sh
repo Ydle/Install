@@ -20,55 +20,98 @@
 #   ===================================================================================================
 #	
 
-echo "Site path (default to /var/www/): "
-read  site_path
-if [[ "$site_path" == "" ]]
-then
-	echo -e "Setting default path to /var/www\n"
-	site_path=/var/www
-fi
+# Default values
+default_site_path=/var/www/
+default_site_dir=ydle
+default_db_ydle_login=ydle
+default_db_ydle_pass=ydle
+default_db_ydle_name=ydle
 
-echo "Site directory (default to ydle/): "
-read site_dir
-if [[ "$site_dir" == "" ]]
-then 
-	echo -e "Setting defaut dir to ydle/\n"
-        site_dir=ydle
-fi
+default_db_host=localhost
 
-#####################
-#  DATABASE ACCESS  #
-#####################
-echo "Ydle login for mysql: "
-read  db_ydle_login
-echo "Ydle password for mysql: "
-read  db_ydle_pass
-echo "Name of the database: "
-read db_ydle_name
-echo "Server of the database: "
-read db_host
+default_user_hub_login=admin
+default_user_hub_password=password
+default_user_hub_mail=admin@localhost
 
-if [[ "$db_ydle_login" == "" || "$db_ydle_pass" == "" || "$db_ydle_name" == "" ]]
-then
-	echo "You have to set correctly the login, password and name of the database before continuing"
-	exit 1
-fi
+default_db_root_user=root
+default_db_root_pass=
 
-#####################
-#  User ACCESS      #
-#####################
-echo "User login for the HUB : "
-read  user_hub_login
-echo "User password for the HUB: "
-read  user_hub_pass
-echo "User mail for the HUB : "
-read  user_hub_mail
+ask_value() {
+	echo -n $1
+	read value
+	if [[ "$value" == "" ]]
+	then
+		#site_path=/var/www
+		RETURN=$2
+	else
+		RETURN=$value
+	fi
+}
 
-if [[ "$user_hub_login" == "" || "$user_hub_pass" == "" || "$user_hub_mail" == "" ]]
-then
-	echo "You have to set correctly the login, password and mail for the HUB before continuing"
-	exit 1
-fi
+get_parameters (){
+	#####################
+	#  Application path #
+	#####################
+
+
+	ask_value "Site path (default to $default_site_path): " $default_site_path
+	site_path=$RETURN
+	ask_value "Site directory (default to $default_site_dir): " $default_site_dir
+	site_dir=$RETURN
+	#####################
+	#  DATABASE ACCESS  #
+	#####################
+
+	ask_value "Database username : (default $default_db_ydle_login): " $default_db_ydle_login
+	db_ydle_login=$RETURN
+
+	ask_value "Database password : (default $default_db_ydle_pass): " $default_db_ydle_pass
+	db_ydle_pass=$RETURN
+
+	ask_value "Database name  : (default $default_db_ydle_pass): " $default_db_ydle_name
+	db_ydle_name=$RETURN
+
+	ask_value "Server hostname/ip  : (default $default_db_host): " $default_db_host
+	db_host=$RETURN
+
+	#####################
+	#  User ACCESS      #
+	#####################
+
+	ask_value "Default user for HUB UI  : (default $default_user_hub_login): " $default_user_hub_login
+	user_hub_login=$RETURN
+
+	ask_value "Default password for HUB UI  : (default $default_user_hub_password): " $default_user_hub_password
+	user_hub_password=$RETURN
+
+	ask_value "Default mail HUB UI  : (default $default_user_hub_mail): " $default_user_hub_mail
+	user_hub_mail=$RETURN
+}
+answer='n'
+while [[ $answer == 'n' ]]
+do
+	get_parameters
+	clear
+	echo -e "Settings review:"
+	echo "--------------------"
+	echo "Application path : $site_path"
+	echo "Application directory : $site_dir"
+	echo "--------------------"
+	echo "Ydle Database :"
+	echo "Database host : $db_host"
+	echo "User : $db_ydle_login"
+	echo "Password : $db_ydle_pass"
+	echo "Database name : $db_ydle_name"
+	echo "--------------------"
+	echo "HUB UI "
+	echo "User : $user_hub_login"
+	echo "Password : $user_hub_password"
+	echo "E-Mail : $user_hub_mail"
+	echo "--------------------"
+
+	ask_value "All the parameters are ok ? (Y/n)" 
+	answer=$RETURN
+done
 
 ######################
 #  DATABASE INSTALL  #
@@ -77,23 +120,19 @@ echo -n "Do you want to create database ? [y/n]"
 read createdb
 if [[ "$createdb" == "y" || "$createdb" == "Y" ]]
 then
-        echo "Root password for mysql: "
-        read  db_root_pass
-	if [[ "$db_root_pass" == "" ]]
-	then
-		echo "You have to set correctly the database root password"
-		exit 1
-	fi
+    echo "Root password for mysql: "
+    read  db_root_pass
+    
+    echo "CREATE DATABASE ${db_ydle_name} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+    CREATE USER '${db_ydle_login}'@'localhost' IDENTIFIED BY '${db_ydle_pass}';
+    GRANT ALL ON ${db_ydle_name}.* TO '${db_ydle_login}';
+    quit;"
 
-        echo "CREATE DATABASE ${db_ydle_name} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-        CREATE USER '${db_ydle_login}'@'localhost' IDENTIFIED BY '${db_ydle_pass}';
-        GRANT ALL ON ${db_ydle_name}.* TO '${db_ydle_login}';
-        quit;"
+    mysql -uroot -p${db_root_pass} -e "CREATE DATABASE ${db_ydle_name} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+    CREATE USER '${db_ydle_login}'@'localhost' IDENTIFIED BY '${db_ydle_pass}';
+    GRANT ALL ON ${db_ydle_name}.* TO '${db_ydle_login}';
+    "
 
-        mysql -uroot -p${db_root_pass} -e "CREATE DATABASE ${db_ydle_name} DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
-        CREATE USER '${db_ydle_login}'@'localhost' IDENTIFIED BY '${db_ydle_pass}';
-        GRANT ALL ON ${db_ydle_name}.* TO '${db_ydle_login}';
-        "
 	if [[ $? -ne 0 ]]
 	then
 		echo -e "\nSorry, it seems you have got an error during database creation process.\nPlease correct it before continuing"
@@ -111,7 +150,7 @@ YDLE_SECRET="TopSecret" YDLE_LOCALE="en" YDLE_DB_DRIVER="pdo_mysql" YDLE_DB_HOST
 cd ${site_dir};
 app/console doctrine:schema:update --force --env=prod
 app/console doctrine:fixtures:load --env=prod
-app/console fos:user:create ${user_hub_login} ${user_hub_mail} ${user_hub_pass}
+app/console fos:user:create ${user_hub_login} ${user_hub_mail} ${user_hub_password}
 
 ###########################
 #  PROJECT CONFIGURATION  #
